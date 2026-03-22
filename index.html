@@ -439,9 +439,9 @@
   }
 
   /* ── Agent demo section ── */
-  .demo-wrap {
-    padding: 100px 0; position: relative; overflow: hidden;
-  }
+  .demo-wrap { padding: 100px 0; position: relative; overflow: hidden; }
+  .demo-section { padding: 0 40px; }
+  @media (max-width: 900px) { .demo-section { padding: 0 20px; } }
   .demo-wrap::before {
     content: '';
     position: absolute; bottom: -200px; right: -200px;
@@ -637,7 +637,7 @@
     h1 { font-size: 36px; }
     h2 { font-size: 30px; }
     .cta-wrap h2 { font-size: 36px; }
-    .hero { grid-template-columns: 1fr; gap: 48px; }
+    .hero { grid-template-columns: 1fr; gap: 48px; padding: 0 20px; }
     .hero-visual { display: none; }
     .hero-mobile-mockup { display: block; }
     .demo-grid { grid-template-columns: 1fr; }
@@ -648,10 +648,15 @@
       width: 80px; height: 2px;
       background: repeating-linear-gradient(to right, var(--red) 0px, var(--red) 6px, transparent 6px, transparent 12px);
     }
-    nav { padding: 0 20px; }
+    nav { padding: 0 16px; }
     nav .nav-links { display: none; }
     section { padding: 60px 20px; }
     .what-inner, .agents-inner { padding: 0 20px; }
+    .openclaw-inner, .cta-inner { padding: 0 20px; }
+    .demo-grid { padding: 0; }
+    .hero-sub { font-size: 16px; }
+    .section-sub { font-size: 15px; }
+    .beehiiv-wrap iframe { max-width: 100% !important; }
   }
 
   /* mobile hero mini-mockup */
@@ -664,6 +669,18 @@
     }
     .hero-mobile-mockup .panel-label { margin-bottom: 8px; }
     .hero-mobile-mockup .code-line { font-size: 10px; line-height: 1.7; }
+  }
+
+  @media (max-width: 480px) {
+    h1 { font-size: 30px; }
+    h2 { font-size: 26px; }
+    .cta-wrap h2 { font-size: 28px; }
+    .hero { padding: 0 16px; }
+    nav { padding: 0 12px; }
+    .nav-cta { padding: 6px 14px; font-size: 12px; }
+    section { padding: 48px 16px; }
+    .what-inner, .agents-inner, .cta-inner { padding: 0 16px; }
+    .demo-section { padding: 0 16px; }
   }
 
   /* ── Fade-in ── */
@@ -896,7 +913,7 @@
 
 <!-- ── Agent Demo Section ── -->
 <div class="demo-wrap" id="demo">
-  <section style="padding:0 40px">
+  <section class="demo-section">
     <div class="demo-grid">
       <div class="agent-chat fade-in">
         <div class="chat-header">
