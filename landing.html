@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SophosAI — Sandboxed AI Agent Runtime</title>
+<meta name="description" content="Give AI agents a full Linux desktop inside a container that can't touch your machine. Build faster. Break nothing." />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:          #0c0c0f;
+    --surface:     #141418;
+    --surface2:    #1a1a20;
+    --border:      #2a2a35;
+    --accent:      #6366f1;
+    --accent-dim:  #4f46e5;
+    --accent-glow: rgba(99,102,241,0.18);
+    --green:       #22c55e;
+    --green-glow:  rgba(34,197,94,0.14);
+    --red:         #ef4444;
+    --orange:      #f59e0b;
+    --text:        #e4e4e7;
+    --text-dim:    #71717a;
+    --text-faint:  #3f3f46;
+    --font-mono:   'JetBrains Mono', 'Fira Code', monospace;
+    --font-sans:   'DM Sans', 'Inter', system-ui, sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── Nav ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 40px; height: 60px;
+    background: rgba(12,12,15,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-family: var(--font-mono); font-size: 15px; font-weight: 600;
+    color: var(--text); letter-spacing: 0.04em;
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none;
+  }
+  .nav-logo .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+  .nav-links { display: flex; gap: 32px; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 14px; transition: color .2s; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta {
+    background: transparent; color: var(--accent); border: 1px solid var(--accent);
+    border-radius: 8px; padding: 8px 20px; font-size: 13px;
+    font-family: var(--font-mono); font-weight: 500; cursor: pointer;
+    transition: all .2s; display: flex; align-items: center; gap: 8px;
+  }
+  .nav-cta:hover { background: var(--accent); color: #fff; box-shadow: 0 0 20px var(--accent-glow); }
+  .nav-cta .pulse-sm {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  /* ── Sections ── */
+  section { padding: 100px 40px; max-width: 1200px; margin: 0 auto; }
+
+  /* ── Hero ── */
+  .hero-wrap {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden; padding-top: 60px;
+  }
+  .hero-glow {
+    position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+    width: 900px; height: 600px;
+    background: radial-gradient(ellipse at center, rgba(99,102,241,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-glow-2 {
+    position: absolute; bottom: -100px; right: -100px;
+    width: 500px; height: 500px;
+    background: radial-gradient(ellipse at center, rgba(34,197,94,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero {
+    max-width: 1200px; margin: 0 auto; padding: 0 40px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 80px;
+    align-items: center;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 6px 14px; font-size: 12px;
+    color: var(--text-dim); font-family: var(--font-mono);
+    margin-bottom: 28px;
+  }
+  .hero-badge .pulse {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--orange);
+    box-shadow: 0 0 8px var(--orange);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
+  }
+  h1 {
+    font-size: 56px; font-weight: 700; line-height: 1.08;
+    letter-spacing: -0.03em; margin-bottom: 24px;
+  }
+  h1 .gradient {
+    background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 40%, #22c55e 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-sub {
+    font-size: 18px; color: var(--text-dim); line-height: 1.7;
+    margin-bottom: 40px; max-width: 480px;
+  }
+
+  /* ── Waitlist Form ── */
+  .waitlist-form {
+    display: flex; gap: 10px; flex-wrap: wrap; max-width: 460px;
+  }
+  .waitlist-form input {
+    flex: 1; min-width: 200px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 18px; font-size: 15px;
+    font-family: var(--font-sans); color: var(--text);
+    outline: none; transition: border-color .2s;
+  }
+  .waitlist-form input::placeholder { color: var(--text-faint); }
+  .waitlist-form input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+  .btn-primary {
+    background: var(--accent); color: #fff; border: none;
+    border-radius: 10px; padding: 14px 28px; font-size: 15px;
+    font-family: var(--font-sans); font-weight: 600; cursor: pointer;
+    transition: all .2s; display: flex; align-items: center; gap: 8px;
+    white-space: nowrap;
+  }
+  .btn-primary:hover { background: var(--accent-dim); box-shadow: 0 0 30px var(--accent-glow); transform: translateY(-1px); }
+  .btn-secondary {
+    background: transparent; color: var(--text); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 28px; font-size: 15px;
+    font-family: var(--font-sans); font-weight: 500; cursor: pointer;
+    transition: all .2s; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-secondary:hover { border-color: var(--text-dim); background: var(--surface); }
+  .waitlist-note {
+    font-size: 12px; color: var(--text-faint); margin-top: 10px;
+    font-family: var(--font-mono);
+    width: 100%;
+  }
+  .waitlist-success {
+    display: none; padding: 14px 20px;
+    background: var(--green-glow); border: 1px solid rgba(34,197,94,0.3);
+    border-radius: 10px; font-size: 14px; color: var(--green);
+    font-family: var(--font-mono); align-items: center; gap: 8px;
+  }
+
+  /* ── Hero terminal mockup ── */
+  .hero-visual { position: relative; }
+  .window {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+  }
+  .window-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .window-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .window-title {
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-faint);
+    margin-left: 8px; flex: 1; text-align: center;
+  }
+  .split-view {
+    display: grid; grid-template-columns: 1fr 1fr;
+    height: 340px;
+  }
+  .panel-left {
+    border-right: 1px solid var(--border);
+    padding: 14px;
+    overflow: hidden;
+  }
+  .panel-label {
+    font-family: var(--font-mono); font-size: 10px; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .panel-label::before {
+    content: ''; display: inline-block; width: 6px; height: 6px;
+    border-radius: 50%; background: var(--accent);
+  }
+  .code-line {
+    font-family: var(--font-mono); font-size: 11px;
+    line-height: 1.8; white-space: pre;
+  }
+  .c-kw   { color: #c084fc; }
+  .c-fn   { color: #60a5fa; }
+  .c-str  { color: #86efac; }
+  .c-cm   { color: var(--text-faint); }
+  .c-num  { color: #fbbf24; }
+  .c-op   { color: var(--text-dim); }
+  .cursor {
+    display: inline-block; width: 2px; height: 14px;
+    background: var(--accent); vertical-align: middle; margin-left: 1px;
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  .panel-right {
+    padding: 14px; background: #0f0f14;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .desktop-bar {
+    background: #1e1e2a; border-radius: 4px;
+    padding: 6px 10px; font-family: var(--font-mono); font-size: 10px;
+    color: var(--text-dim); display: flex; align-items: center; gap: 8px;
+  }
+  .desktop-win {
+    flex: 1; background: var(--surface2); border-radius: 6px; border: 1px solid var(--border);
+    overflow: hidden; position: relative;
+  }
+  .desktop-win-bar {
+    background: #1e1e2a; padding: 5px 10px; font-size: 10px;
+    font-family: var(--font-mono); color: var(--text-faint);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .desktop-content {
+    padding: 10px; font-family: var(--font-mono); font-size: 10px; color: var(--text-dim);
+  }
+  .terminal-line { line-height: 1.9; }
+  .terminal-line .prompt { color: var(--green); }
+  .terminal-line .cmd { color: var(--text); }
+  .terminal-line .out { color: var(--text-dim); }
+
+  .shield-badge {
+    position: absolute; top: -16px; right: -16px;
+    background: linear-gradient(135deg, var(--surface2), var(--surface));
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 10px 14px; display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    font-size: 12px; font-weight: 500; color: var(--green);
+    font-family: var(--font-mono);
+  }
+  .shield-icon { font-size: 18px; }
+  .agent-badge {
+    position: absolute; bottom: -16px; left: -16px;
+    background: linear-gradient(135deg, var(--surface2), var(--surface));
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 10px 14px; display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    font-size: 12px; font-family: var(--font-mono);
+  }
+  .agent-badge .ai-dot { color: var(--accent); }
+
+  /* ── What it is (concise) ── */
+  .what-wrap {
+    padding: 100px 0;
+    background: linear-gradient(180deg, var(--bg) 0%, #0d0d12 100%);
+    position: relative; overflow: hidden;
+  }
+  .what-wrap::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at 50% 20%, rgba(99,102,241,0.05) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .what-inner { max-width: 1200px; margin: 0 auto; padding: 0 40px; }
+  .what-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+    margin-top: 48px;
+  }
+  .what-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 32px 28px;
+    position: relative; overflow: hidden;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .what-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    opacity: 0; transition: opacity .2s;
+  }
+  .what-card:nth-child(1)::before { background: linear-gradient(90deg, transparent, var(--accent), transparent); }
+  .what-card:nth-child(2)::before { background: linear-gradient(90deg, transparent, var(--green), transparent); }
+  .what-card:nth-child(3)::before { background: linear-gradient(90deg, transparent, var(--orange), transparent); }
+  .what-card:hover::before { opacity: 1; }
+  .what-card:hover { border-color: rgba(99,102,241,0.3); box-shadow: 0 4px 24px var(--accent-glow); }
+  .what-num {
+    font-family: var(--font-mono); font-size: 11px; color: var(--accent);
+    margin-bottom: 14px; letter-spacing: 0.1em;
+  }
+  .what-card:nth-child(2) .what-num { color: var(--green); }
+  .what-card:nth-child(3) .what-num { color: var(--orange); }
+  .what-title { font-size: 18px; font-weight: 600; margin-bottom: 10px; }
+  .what-desc { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
+
+  /* ── Section shared ── */
+  .section-label {
+    font-family: var(--font-mono); font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.12em; color: var(--accent); margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 {
+    font-size: 42px; font-weight: 700; line-height: 1.15;
+    letter-spacing: -0.025em; margin-bottom: 16px;
+  }
+  .section-sub {
+    font-size: 17px; color: var(--text-dim); max-width: 560px; line-height: 1.7;
+    margin-bottom: 56px;
+  }
+
+  /* ── Safety section ── */
+  .safety-wrap {
+    background: linear-gradient(180deg, #0d0d12 0%, var(--bg) 100%);
+    padding: 100px 0;
+    position: relative; overflow: hidden;
+  }
+  .safety-wrap::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at 80% 50%, rgba(34,197,94,0.05) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .sandbox-diagram {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 40px;
+    display: grid; grid-template-columns: 1fr auto 1fr; gap: 24px;
+    align-items: center; position: relative; overflow: hidden;
+  }
+  .sandbox-diagram::before {
+    content: 'ISOLATED SANDBOX';
+    position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.15em;
+    color: var(--text-faint);
+  }
+  .zone {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .zone.host { border-color: rgba(34,197,94,0.3); }
+  .zone.container { border-color: rgba(99,102,241,0.3); }
+  .zone-title {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px;
+  }
+  .zone.host .zone-title { color: var(--green); }
+  .zone.container .zone-title { color: var(--accent); }
+  .zone-item {
+    font-size: 13px; color: var(--text-dim);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .zone-item::before { content: ''; display: inline-block; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+  .zone.host .zone-item::before { background: var(--green); }
+  .zone.container .zone-item::before { background: var(--accent); }
+  .barrier {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .barrier-line {
+    width: 2px; height: 80px;
+    background: repeating-linear-gradient(to bottom, var(--red) 0px, var(--red) 6px, transparent 6px, transparent 12px);
+    opacity: 0.5;
+  }
+  .barrier-label {
+    font-family: var(--font-mono); font-size: 10px; color: var(--red);
+    text-transform: uppercase; letter-spacing: 0.1em; text-align: center;
+    opacity: 0.8;
+  }
+  .no-escape {
+    font-size: 11px; color: var(--red); font-family: var(--font-mono);
+    text-align: center; opacity: 0.7;
+  }
+
+  /* ── Scenarios — visceral safety framing ── */
+  .scenarios {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+    margin-top: 40px;
+  }
+  .scenario-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 28px;
+    transition: border-color .2s, box-shadow .2s;
+    position: relative; overflow: hidden;
+  }
+  .scenario-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--green), transparent);
+    opacity: 0; transition: opacity .2s;
+  }
+  .scenario-card:hover { border-color: rgba(34,197,94,0.4); box-shadow: 0 4px 24px var(--green-glow); }
+  .scenario-card:hover::before { opacity: 1; }
+  .scenario-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    background: var(--green-glow); border: 1px solid rgba(34,197,94,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; margin-bottom: 18px;
+  }
+  .scenario-title { font-size: 16px; font-weight: 600; margin-bottom: 10px; }
+  .scenario-desc { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
+  .scenario-result {
+    margin-top: 12px; padding: 8px 12px;
+    background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.12);
+    border-radius: 8px; font-family: var(--font-mono); font-size: 11px;
+    color: var(--green);
+  }
+
+  /* ── Agent demo section ── */
+  .demo-wrap {
+    padding: 100px 0; position: relative; overflow: hidden;
+  }
+  .demo-wrap::before {
+    content: '';
+    position: absolute; bottom: -200px; right: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(ellipse, rgba(99,102,241,0.08) 0%, transparent 70%);
+  }
+  .demo-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center;
+  }
+
+  /* agent chat mockup */
+  .agent-chat {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    box-shadow: 0 32px 64px rgba(0,0,0,0.5);
+  }
+  .chat-header {
+    background: var(--surface2); padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .chat-title {
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); flex: 1;
+  }
+  .status-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .chat-messages { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .msg { display: flex; gap: 10px; align-items: flex-start; }
+  .msg-avatar {
+    width: 24px; height: 24px; border-radius: 6px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .msg-avatar.user { background: rgba(99,102,241,0.2); color: var(--accent); }
+  .msg-avatar.ai   { background: rgba(34,197,94,0.15); color: var(--green); }
+  .msg-content { font-size: 13px; line-height: 1.6; flex: 1; }
+  .msg-content.user { color: var(--text); }
+  .msg-content.ai   { color: var(--text-dim); }
+  .tool-event {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.15);
+    border-radius: 8px; padding: 7px 12px; margin: 2px 0;
+  }
+  .tool-name { font-family: var(--font-mono); font-size: 11px; color: var(--accent); }
+  .tool-arg  { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); }
+  .tool-ok   { font-size: 11px; color: var(--green); margin-left: auto; }
+  .checkpoint {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.15);
+    border-radius: 8px; padding: 7px 12px;
+    font-family: var(--font-mono); font-size: 11px; color: var(--green);
+  }
+  .chat-input-row {
+    padding: 12px 16px; border-top: 1px solid var(--border);
+    display: flex; gap: 8px; align-items: center;
+  }
+  .chat-input {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px;
+    font-family: var(--font-sans); font-size: 13px; color: var(--text-faint);
+    outline: none;
+  }
+  .chat-send {
+    background: var(--accent); border: none; border-radius: 7px;
+    width: 32px; height: 32px; cursor: pointer; color: #fff;
+    font-size: 14px; display: flex; align-items: center; justify-content: center;
+  }
+
+  .capability-list { display: flex; flex-direction: column; gap: 14px; }
+  .capability {
+    display: flex; gap: 16px; align-items: flex-start;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px;
+    transition: border-color .2s;
+  }
+  .capability:hover { border-color: rgba(99,102,241,0.35); }
+  .cap-icon {
+    width: 36px; height: 36px; flex-shrink: 0; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+  }
+  .cap-icon.a { background: rgba(99,102,241,0.15); }
+  .cap-icon.g { background: rgba(34,197,94,0.12); }
+  .cap-icon.o { background: rgba(245,158,11,0.12); }
+  .cap-icon.r { background: rgba(239,68,68,0.12); }
+  .cap-body { flex: 1; }
+  .cap-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .cap-desc { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+
+  /* ── Supported Agents (replaces standalone OpenClaw section) ── */
+  .agents-wrap {
+    padding: 100px 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.06) 0%, transparent 60%);
+  }
+  .agents-inner { max-width: 1200px; margin: 0 auto; padding: 0 40px; text-align: center; }
+  .agents-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+    margin-top: 48px; text-align: left;
+  }
+  .agent-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 32px 28px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .agent-card:hover { border-color: rgba(99,102,241,0.3); box-shadow: 0 4px 24px var(--accent-glow); }
+  .agent-card-icon {
+    font-size: 28px; margin-bottom: 16px;
+  }
+  .agent-card-name {
+    font-size: 17px; font-weight: 600; margin-bottom: 6px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .agent-card-tag {
+    font-family: var(--font-mono); font-size: 10px;
+    padding: 2px 8px; border-radius: 10px;
+    background: rgba(34,197,94,0.12); color: var(--green); font-weight: 500;
+  }
+  .agent-card-tag.soon {
+    background: rgba(245,158,11,0.12); color: var(--orange);
+  }
+  .agent-card-desc { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
+  .agent-card-tools {
+    margin-top: 14px; display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .agent-card-tools span {
+    font-family: var(--font-mono); font-size: 10px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 3px 8px; color: var(--text-dim);
+  }
+
+  /* ── CTA ── */
+  .cta-wrap {
+    padding: 120px 0; text-align: center;
+    background: radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.1) 0%, transparent 60%);
+  }
+  .cta-inner { max-width: 640px; margin: 0 auto; padding: 0 40px; }
+  .cta-wrap h2 { font-size: 48px; margin-bottom: 20px; }
+  .cta-wrap p  { font-size: 18px; color: var(--text-dim); margin-bottom: 44px; line-height: 1.7; }
+  .cta-form {
+    display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+    max-width: 460px; margin: 0 auto;
+  }
+  .cta-form input {
+    flex: 1; min-width: 200px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 20px; font-size: 15px;
+    font-family: var(--font-sans); color: var(--text);
+    outline: none; transition: border-color .2s;
+  }
+  .cta-form input::placeholder { color: var(--text-faint); }
+  .cta-form input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+  /* ── Footer ── */
+  footer {
+    border-top: 1px solid var(--border); padding: 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    color: var(--text-faint); font-size: 13px; font-family: var(--font-mono);
+  }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 40px; max-width: 480px; width: 90%;
+    position: relative; box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+  }
+  .modal-close {
+    position: absolute; top: 16px; right: 16px; background: none;
+    border: none; color: var(--text-faint); cursor: pointer;
+    font-size: 20px; line-height: 1; padding: 4px;
+    transition: color .2s;
+  }
+  .modal-close:hover { color: var(--text); }
+  .modal h3 {
+    font-size: 24px; font-weight: 700; margin-bottom: 8px;
+    letter-spacing: -0.02em;
+  }
+  .modal p {
+    font-size: 15px; color: var(--text-dim); margin-bottom: 24px; line-height: 1.6;
+  }
+  .modal .waitlist-form { max-width: 100%; }
+
+  /*
+   * ── BEEHIIV EMBED PLACEHOLDER ──
+   * When you have your beehiiv form ready, you can either:
+   *
+   * Option A: Replace the custom form in the modal with your beehiiv iframe embed:
+   *   <iframe src="https://embeds.beehiiv.com/YOUR_FORM_ID" ...></iframe>
+   *
+   * Option B: Keep this custom form and POST to beehiiv's API:
+   *   See https://developers.beehiiv.com/ for API docs
+   *
+   * The forms below use a simple JS handler you can swap out.
+   */
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    h1 { font-size: 36px; }
+    h2 { font-size: 30px; }
+    .cta-wrap h2 { font-size: 36px; }
+    .hero { grid-template-columns: 1fr; gap: 48px; }
+    .hero-visual { display: none; }
+    .hero-mobile-mockup { display: block; }
+    .demo-grid { grid-template-columns: 1fr; }
+    .what-grid, .scenarios, .agents-grid { grid-template-columns: 1fr; }
+    .sandbox-diagram { grid-template-columns: 1fr; }
+    .barrier { flex-direction: row; }
+    .barrier-line {
+      width: 80px; height: 2px;
+      background: repeating-linear-gradient(to right, var(--red) 0px, var(--red) 6px, transparent 6px, transparent 12px);
+    }
+    nav { padding: 0 20px; }
+    nav .nav-links { display: none; }
+    section { padding: 60px 20px; }
+    .what-inner, .agents-inner { padding: 0 20px; }
+  }
+
+  /* mobile hero mini-mockup */
+  .hero-mobile-mockup { display: none; }
+  @media (max-width: 900px) {
+    .hero-mobile-mockup {
+      display: block; margin-top: 24px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px; overflow: hidden;
+    }
+    .hero-mobile-mockup .panel-label { margin-bottom: 8px; }
+    .hero-mobile-mockup .code-line { font-size: 10px; line-height: 1.7; }
+  }
+
+  /* ── Fade-in ── */
+  .fade-in { opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .6s ease; }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- ── Nav ── -->
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="dot"></div>
+    sophosai
+  </a>
+  <div class="nav-links">
+    <a href="#how-it-works">How It Works</a>
+    <a href="#safety">Safety</a>
+    <a href="#agents">Agents</a>
+    <a href="#demo">Demo</a>
+  </div>
+  <button class="nav-cta" onclick="openModal()">
+    <span class="pulse-sm"></span>
+    Join the Waitlist
+  </button>
+</nav>
+
+
+<!-- ── Hero ── -->
+<div class="hero-wrap">
+  <div class="hero-glow"></div>
+  <div class="hero-glow-2"></div>
+  <div class="hero">
+    <div class="hero-copy fade-in">
+      <div class="hero-badge">
+        <div class="pulse"></div>
+        Coming soon &mdash; free early access
+      </div>
+      <h1>Let AI Agents<br/>Loose. <span class="gradient">Safely.</span></h1>
+      <p class="hero-sub">
+        SophosAI gives autonomous AI agents a full Linux desktop inside an isolated
+        Docker container. They can browse, code, run commands, and interact with GUIs
+        &mdash; without ever touching your host machine.
+      </p>
+      <form class="waitlist-form" onsubmit="handleWaitlist(event, this)">
+        <input type="email" placeholder="you@email.com" required />
+        <button type="submit" class="btn-primary">Get Early Access</button>
+        <div class="waitlist-note">Free when it launches. No spam, just build updates.</div>
+      </form>
+      <div class="waitlist-success" id="hero-success">
+        &#x2714; You're on the list. We'll email you when it's ready.
+      </div>
+
+      <!-- Mobile-only mini mockup (replaces hidden hero visual) -->
+      <div class="hero-mobile-mockup">
+        <div class="panel-label">Agent Sandbox &mdash; running</div>
+        <div class="code-line"><span class="c-cm">$ agent runs freely inside container</span></div>
+        <div class="code-line"><span class="prompt" style="color:var(--green)">&#x2714;</span> <span class="c-str">rm -rf / &mdash; sandbox destroyed, host untouched</span></div>
+        <div class="code-line"><span class="prompt" style="color:var(--green)">&#x2714;</span> <span class="c-str">pip install anything &mdash; no host pollution</span></div>
+        <div class="code-line"><span class="prompt" style="color:var(--green)">&#x2714;</span> <span class="c-str">browse the web &mdash; isolated network</span></div>
+      </div>
+    </div>
+
+    <div class="hero-visual fade-in" style="transition-delay:.15s">
+      <div class="shield-badge">
+        <span class="shield-icon">&#x1F6E1;</span> Host OS Protected
+      </div>
+      <div class="window">
+        <div class="window-bar">
+          <div class="window-dot" style="background:#ef4444"></div>
+          <div class="window-dot" style="background:#f59e0b"></div>
+          <div class="window-dot" style="background:#22c55e"></div>
+          <div class="window-title">sophosai &mdash; sandbox &mdash; running</div>
+        </div>
+        <div class="split-view">
+          <!-- Code / agent panel -->
+          <div class="panel-left">
+            <div class="panel-label">Agent Workspace</div>
+            <div class="code-line"><span class="c-cm">// agent modifying app code</span></div>
+            <div class="code-line"><span class="c-kw">import</span> <span class="c-fn">express</span> <span class="c-kw">from</span> <span class="c-str">'express'</span></div>
+            <div class="code-line"><span class="c-kw">const</span> <span class="c-fn">app</span> <span class="c-op">=</span> <span class="c-fn">express</span><span class="c-op">()</span></div>
+            <div class="code-line"></div>
+            <div class="code-line"><span class="c-fn">app</span><span class="c-op">.</span><span class="c-fn">get</span><span class="c-op">(</span><span class="c-str">'/'</span><span class="c-op">,</span> <span class="c-op">(</span><span class="c-fn">req</span><span class="c-op">,</span> <span class="c-fn">res</span><span class="c-op">)</span> <span class="c-kw">=></span> <span class="c-op">{</span></div>
+            <div class="code-line">  <span class="c-fn">res</span><span class="c-op">.</span><span class="c-fn">json</span><span class="c-op">({</span> <span class="c-fn">status</span><span class="c-op">:</span> <span class="c-str">'live'</span> <span class="c-op">})</span></div>
+            <div class="code-line"><span class="c-op">})</span></div>
+            <div class="code-line"></div>
+            <div class="code-line"><span class="c-fn">app</span><span class="c-op">.</span><span class="c-fn">listen</span><span class="c-op">(</span><span class="c-num">3000</span><span class="c-op">)</span><span class="cursor"></span></div>
+          </div>
+          <!-- Desktop preview panel -->
+          <div class="panel-right">
+            <div class="desktop-bar">
+              <span style="color:var(--green)">&#x25CF;</span> XFCE Desktop &mdash; noVNC
+            </div>
+            <div class="desktop-win">
+              <div class="desktop-win-bar">
+                <span style="color:#ef4444">&#x25CF;</span>
+                <span style="color:#f59e0b">&#x25CF;</span>
+                <span style="color:#22c55e">&#x25CF;</span>
+                &nbsp; Terminal
+              </div>
+              <div class="desktop-content">
+                <div class="terminal-line"><span class="prompt">agent@sandbox</span>:<span class="cmd">~$</span> <span class="cmd">npm start</span></div>
+                <div class="terminal-line"><span class="out">Server running on :3000</span></div>
+                <div class="terminal-line"><span class="prompt">agent@sandbox</span>:<span class="cmd">~$</span> <span class="cmd">curl localhost:3000</span></div>
+                <div class="terminal-line"><span class="out">{"status":"live"}</span></div>
+                <div class="terminal-line"><span class="prompt">agent@sandbox</span>:<span class="cmd">~$</span> <span class="cursor"></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="agent-badge">
+        <span class="ai-dot">&#x25CF;</span>
+        <span style="color:var(--text-dim)">Claude agent &mdash; <span style="color:var(--text)">active</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── How it works (3 pillars) ── -->
+<div class="what-wrap" id="how-it-works">
+  <div class="what-inner">
+    <div class="fade-in" style="text-align:center">
+      <div class="section-label" style="justify-content:center">// how it works</div>
+      <h2>One container. Full autonomy.<br/>Zero host risk.</h2>
+      <p class="section-sub" style="margin:0 auto 0; max-width: 600px">
+        SophosAI spins up an isolated Docker container with a real Linux desktop,
+        drops your AI agent inside, and lets it work freely while your machine stays untouched.
+      </p>
+    </div>
+
+    <div class="what-grid fade-in" style="transition-delay:.1s">
+      <div class="what-card">
+        <div class="what-num">01 &mdash; SANDBOX</div>
+        <div class="what-title">Isolated Linux Desktop</div>
+        <div class="what-desc">
+          Each project gets its own Docker container with Ubuntu, XFCE4, Firefox, a terminal, and
+          a file manager. Resource-limited, network-controlled, destroyed on project delete.
+        </div>
+      </div>
+      <div class="what-card">
+        <div class="what-num">02 &mdash; AGENT</div>
+        <div class="what-title">AI Agent Lives Inside</div>
+        <div class="what-desc">
+          A Claude-powered agent reads, writes, and runs code inside the sandbox. It modifies the
+          app's source, checks logs, and auto-commits every change via git. You watch in real time.
+        </div>
+      </div>
+      <div class="what-card">
+        <div class="what-num">03 &mdash; STREAM</div>
+        <div class="what-title">See Everything Live</div>
+        <div class="what-desc">
+          The desktop streams to your browser via noVNC. The agent chat shows every tool call.
+          The app preview hot-reloads on every file change. Full transparency, zero guesswork.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── Safety Section ── -->
+<div class="safety-wrap" id="safety">
+  <section>
+    <div class="fade-in">
+      <div class="section-label">// security model</div>
+      <h2>Your agent can <span style="font-family:var(--font-mono);color:var(--red)">rm&nbsp;&#8209;rf&nbsp;/</span><br/>all day long.</h2>
+      <p class="section-sub">
+        You won't even notice. Every agent operates inside a disposable Docker container with hard
+        resource limits and a blocked network. It can trash its own sandbox. It can never reach yours.
+      </p>
+    </div>
+
+    <div class="sandbox-diagram fade-in" style="transition-delay:.1s">
+      <div class="zone host">
+        <div class="zone-title">&#x1F4BB; Your Host Machine</div>
+        <div class="zone-item">Your OS, files &amp; credentials</div>
+        <div class="zone-item">Docker Desktop</div>
+        <div class="zone-item">SophosAI orchestrator</div>
+        <div class="zone-item">Browser UI</div>
+      </div>
+
+      <div class="barrier">
+        <div class="barrier-label">Container<br/>Wall</div>
+        <div class="barrier-line"></div>
+        <div class="no-escape">No escape</div>
+        <div class="barrier-line"></div>
+        <div class="barrier-label">Read-only<br/>bind mount</div>
+      </div>
+
+      <div class="zone container">
+        <div class="zone-title">&#x1F4E6; Agent Sandbox</div>
+        <div class="zone-item">Ubuntu &mdash; fully isolated</div>
+        <div class="zone-item">Capped CPU &amp; memory</div>
+        <div class="zone-item">Network blocked by default</div>
+        <div class="zone-item">Agent tools scoped to /app</div>
+        <div class="zone-item">Path traversal protection</div>
+        <div class="zone-item">Destroyed on project delete</div>
+      </div>
+    </div>
+
+    <div class="scenarios fade-in" style="transition-delay:.15s">
+      <div class="scenario-card">
+        <div class="scenario-icon">&#x1F4A5;</div>
+        <div class="scenario-title">Agent nukes its filesystem</div>
+        <div class="scenario-desc">
+          The agent runs <span style="font-family:var(--font-mono);font-size:12px;color:var(--text)">rm -rf /</span> inside the container.
+          Your host doesn't blink. Roll back to any git checkpoint with one click.
+        </div>
+        <div class="scenario-result">&#x2714; sandbox destroyed &bull; host untouched &bull; rollback available</div>
+      </div>
+      <div class="scenario-card">
+        <div class="scenario-icon">&#x1F310;</div>
+        <div class="scenario-title">Agent tries to phone home</div>
+        <div class="scenario-desc">
+          Outbound network is blocked by default. DNS resolves to 0.0.0.0. No data exfiltration,
+          no surprise API calls, no crypto miners.
+        </div>
+        <div class="scenario-result">&#x2714; network blocked &bull; DNS sinkholed &bull; zero egress</div>
+      </div>
+      <div class="scenario-card">
+        <div class="scenario-icon">&#x1F4C2;</div>
+        <div class="scenario-title">Agent reads /etc/passwd</div>
+        <div class="scenario-desc">
+          Sure &mdash; the container's <span style="font-family:var(--font-mono);font-size:12px;color:var(--text)">/etc/passwd</span>.
+          Agent tools are bound to /app. Path traversal is caught. Your host filesystem doesn't exist to the agent.
+        </div>
+        <div class="scenario-result">&#x2714; scoped to /app &bull; traversal blocked &bull; host invisible</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ── Agent Demo Section ── -->
+<div class="demo-wrap" id="demo">
+  <section style="padding:0 40px">
+    <div class="demo-grid">
+      <div class="agent-chat fade-in">
+        <div class="chat-header">
+          <div class="status-dot"></div>
+          <div class="chat-title">sophosai agent &mdash; my-dashboard</div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-faint)">claude-sonnet-4</div>
+        </div>
+        <div class="chat-messages">
+          <div class="msg">
+            <div class="msg-avatar user">U</div>
+            <div class="msg-content user">Build a dashboard that tracks Bitcoin price and alerts me when it drops below $80k</div>
+          </div>
+          <div class="tool-event">
+            <span class="tool-name">write_file</span>
+            <span class="tool-arg">src/Dashboard.jsx</span>
+            <span class="tool-ok">&#x2714;</span>
+          </div>
+          <div class="tool-event">
+            <span class="tool-name">write_file</span>
+            <span class="tool-arg">src/usePrice.js</span>
+            <span class="tool-ok">&#x2714;</span>
+          </div>
+          <div class="tool-event">
+            <span class="tool-name">exec_cmd</span>
+            <span class="tool-arg">npm install</span>
+            <span class="tool-ok">&#x2714;</span>
+          </div>
+          <div class="tool-event">
+            <span class="tool-name">get_logs</span>
+            <span class="tool-arg">dev server output</span>
+            <span class="tool-ok">&#x2714;</span>
+          </div>
+          <div class="checkpoint">
+            &#x25C6; checkpoint &mdash; <span style="color:var(--text-dim)">Add Bitcoin price dashboard with alert hook</span>
+          </div>
+          <div class="msg">
+            <div class="msg-avatar ai">A</div>
+            <div class="msg-content ai">Dashboard is live in the preview panel. It polls CoinGecko every 10s and fires a notification when the price crosses $80k. Checkpointed.</div>
+          </div>
+        </div>
+        <div class="chat-input-row">
+          <div class="chat-input">Add a 7-day price chart...</div>
+          <button class="chat-send">&#x2191;</button>
+        </div>
+      </div>
+
+      <div class="fade-in" style="transition-delay:.12s">
+        <div class="section-label">// agent in action</div>
+        <h2>Describe it.<br/>Watch it build.</h2>
+        <p class="section-sub">
+          Tell the agent what you want in plain English. It writes code, installs dependencies,
+          checks logs, and git-commits every change &mdash; all inside the sandbox. You see every
+          step in real time.
+        </p>
+        <div class="capability-list">
+          <div class="capability">
+            <div class="cap-icon a">&#x1F916;</div>
+            <div class="cap-body">
+              <div class="cap-title">10 built-in tools</div>
+              <div class="cap-desc">read_file, write_file, patch_file, exec_cmd, get_logs, git_checkpoint, git_rollback &mdash; all scoped to the sandbox.</div>
+            </div>
+          </div>
+          <div class="capability">
+            <div class="cap-icon o">&#x26A1;</div>
+            <div class="cap-body">
+              <div class="cap-title">Hot-reload preview</div>
+              <div class="cap-desc">Every file change triggers a live reload. The preview panel shows your app running in real time &mdash; no manual refresh.</div>
+            </div>
+          </div>
+          <div class="capability">
+            <div class="cap-icon g">&#x1F4C6;</div>
+            <div class="cap-body">
+              <div class="cap-title">Git checkpoint on every change</div>
+              <div class="cap-desc">Every successful modification is auto-committed. Roll back to any point in the timeline with one click.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ── Supported Agents ── -->
+<div class="agents-wrap" id="agents">
+  <div class="agents-inner">
+    <div class="fade-in">
+      <div class="section-label" style="justify-content:center">// bring your own agent</div>
+      <h2>Works with the agents<br/>you already use.</h2>
+      <p class="section-sub" style="margin: 0 auto 0">
+        SophosAI is the runtime, not the agent. Drop in Claude Code, OpenClaw, or your own
+        custom agent &mdash; they all get the same isolated sandbox.
+      </p>
+    </div>
+
+    <div class="agents-grid fade-in" style="transition-delay:.1s">
+      <div class="agent-card">
+        <div class="agent-card-icon">&#x1F916;</div>
+        <div class="agent-card-name">
+          SophosAI Agent
+          <span class="agent-card-tag">built-in</span>
+        </div>
+        <div class="agent-card-desc">
+          The default Claude-powered coding agent. 10 tools for file ops, command execution,
+          and git management. Streams every step over WebSocket.
+        </div>
+        <div class="agent-card-tools">
+          <span>write_file</span>
+          <span>exec_cmd</span>
+          <span>git_checkpoint</span>
+          <span>get_logs</span>
+        </div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-card-icon">&#x1F9BE;</div>
+        <div class="agent-card-name">
+          OpenClaw
+          <span class="agent-card-tag">supported</span>
+        </div>
+        <div class="agent-card-desc">
+          26 tools, 13,700+ ClawHub skills. Gets a full XFCE desktop with Firefox so it can
+          browse, run scripts, and interact with GUIs autonomously.
+        </div>
+        <div class="agent-card-tools">
+          <span>computer_use</span>
+          <span>browser</span>
+          <span>26 tools</span>
+          <span>13.7k skills</span>
+        </div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-card-icon">&#x2328;&#xFE0F;</div>
+        <div class="agent-card-name">
+          Claude Code
+          <span class="agent-card-tag">supported</span>
+        </div>
+        <div class="agent-card-desc">
+          Anthropic's CLI coding agent. Runs inside the sandbox's VS Code terminal with
+          OAuth authentication. Full IDE experience, fully contained.
+        </div>
+        <div class="agent-card-tools">
+          <span>VS Code</span>
+          <span>terminal</span>
+          <span>OAuth</span>
+          <span>code-server</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── Final CTA ── -->
+<div class="cta-wrap">
+  <div class="cta-inner fade-in">
+    <div class="section-label" style="justify-content:center">// try it free when it launches</div>
+    <h2>Stop worrying about<br/>what your agent might do.</h2>
+    <p>Get on the waitlist and be the first to run your AI agents in a sandboxed Linux
+       desktop &mdash; free when it launches.</p>
+    <form class="cta-form" onsubmit="handleWaitlist(event, this)">
+      <input type="email" placeholder="you@email.com" required />
+      <button type="submit" class="btn-primary" style="font-size:16px;padding:16px 32px">Join the Waitlist</button>
+    </form>
+    <div class="waitlist-success" id="cta-success" style="margin-top:20px">
+      &#x2714; You're on the list. We'll email you when it's ready.
+    </div>
+  </div>
+</div>
+
+
+<!-- ── Footer ── -->
+<footer>
+  <div>sophosai</div>
+  <div style="color:var(--text-faint)">FastAPI &bull; React &bull; Docker &bull; Claude API</div>
+  <div>&#x1F6E1; sandboxed by design</div>
+</footer>
+
+
+<!-- ── Waitlist Modal (triggered from nav) ── -->
+<div class="modal-overlay" id="waitlist-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h3>Join the Waitlist</h3>
+    <p>SophosAI is almost ready. Get free early access when it launches &mdash; no credit card, no strings.</p>
+
+    <!--
+      ════════════════════════════════════════════════
+      BEEHIIV EMBED: Replace this form with your
+      beehiiv iframe embed code when you have it:
+
+      <iframe
+        src="https://embeds.beehiiv.com/YOUR_FORM_ID"
+        data-test-id="beehiiv-embed"
+        width="100%"
+        height="320"
+        frameborder="0"
+        scrolling="no"
+        style="border-radius:12px; background:transparent;"
+      ></iframe>
+      ════════════════════════════════════════════════
+    -->
+    <form class="waitlist-form" onsubmit="handleWaitlist(event, this)">
+      <input type="email" placeholder="you@email.com" required style="width:100%" />
+      <button type="submit" class="btn-primary" style="width:100%;justify-content:center">Get Early Access</button>
+      <div class="waitlist-note">Free access. No spam. Unsubscribe anytime.</div>
+    </form>
+    <div class="waitlist-success" id="modal-success">
+      &#x2714; You're on the list. We'll email you when it's ready.
+    </div>
+  </div>
+</div>
+
+
+<script>
+  // ── Fade-in on scroll ──
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+  // ── Modal ──
+  function openModal() {
+    document.getElementById('waitlist-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal() {
+    document.getElementById('waitlist-modal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  document.getElementById('waitlist-modal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // ── Waitlist handler ──
+  // Replace this with your beehiiv API call or form action.
+  // beehiiv API: POST https://api.beehiiv.com/v2/publications/{pub_id}/subscriptions
+  // Docs: https://developers.beehiiv.com/
+  async function handleWaitlist(e, form) {
+    e.preventDefault();
+    const email = form.querySelector('input[type="email"]').value;
+    const btn = form.querySelector('button[type="submit"]');
+
+    btn.textContent = 'Joining...';
+    btn.disabled = true;
+
+    try {
+      // ┌──────────────────────────────────────────┐
+      // │ REPLACE WITH YOUR BEEHIIV API CALL:      │
+      // │                                          │
+      // │ await fetch('https://api.beehiiv.com/v2/ │
+      // │   publications/YOUR_PUB_ID/subscriptions'│
+      // │ , {                                      │
+      // │   method: 'POST',                        │
+      // │   headers: {                             │
+      // │     'Content-Type': 'application/json',  │
+      // │     'Authorization': 'Bearer YOUR_KEY'   │
+      // │   },                                     │
+      // │   body: JSON.stringify({ email })         │
+      // │ });                                      │
+      // └──────────────────────────────────────────┘
+
+      // Simulate network delay for now
+      await new Promise(r => setTimeout(r, 800));
+
+      // Show success
+      form.style.display = 'none';
+      const successEl = form.nextElementSibling;
+      if (successEl && successEl.classList.contains('waitlist-success')) {
+        successEl.style.display = 'flex';
+      }
+
+      // Close modal after delay if in modal
+      if (form.closest('.modal')) {
+        setTimeout(closeModal, 2000);
+      }
+
+    } catch (err) {
+      btn.textContent = 'Try Again';
+      btn.disabled = false;
+    }
+  }
+</script>
+</body>
+</html>
