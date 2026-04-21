@@ -253,7 +253,7 @@
     <a href="#use-cases">Use Cases</a>
     <a href="#service">Service</a>
   </div>
-  <button class="nav-cta" onclick="openModal()"><span class="pulse-sm"></span>Book a Consult</button>
+  <a class="nav-cta" href="https://subscribe-forms.beehiiv.com/8bad8259-c005-4d5f-9117-a4cb983858ee?referrer=https%3A%2F%2Fsophosai.app%2F" target="_blank" rel="noopener noreferrer"><span class="pulse-sm"></span>Book a Consult</a>
 </nav>
 
 <div class="hero-wrap" id="top">
@@ -263,7 +263,7 @@
       <h1>Run coding and browser agents <span class="gradient">without risking your main machine.</span></h1>
       <p class="hero-sub">SophosAI helps you run AI coding and browser automation workflows in isolated workspaces built for control, visibility, and safer execution.</p>
       <div class="hero-actions">
-        <button class="btn-primary" onclick="openModal()">Book a setup consult</button>
+        <a class="btn-primary" href="https://subscribe-forms.beehiiv.com/8bad8259-c005-4d5f-9117-a4cb983858ee?referrer=https%3A%2F%2Fsophosai.app%2F" target="_blank" rel="noopener noreferrer">Book a setup consult</a>
         <a class="btn-secondary" href="#solution">See how it works</a>
       </div>
       <div class="hero-note">Built for founders, developers, and power users who want capability without exposing their real machine.</div>
@@ -400,7 +400,7 @@
         <li>Validation, walkthrough, and handoff guidance</li>
       </ul>
       <div class="hero-actions" style="justify-content:center; margin-top:28px; margin-bottom:0;">
-        <button class="btn-primary" onclick="openModal()">Book a consult</button>
+        <a class="btn-primary" href="https://subscribe-forms.beehiiv.com/8bad8259-c005-4d5f-9117-a4cb983858ee?referrer=https%3A%2F%2Fsophosai.app%2F" target="_blank" rel="noopener noreferrer">Book a consult</a>
         <a class="btn-secondary" href="#problem">Why this matters</a>
       </div>
     </div>
@@ -413,32 +413,5 @@
   <div>🛡 more control • less risk</div>
 </footer>
 
-<div class="modal-overlay" id="waitlist-modal">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal()">&times;</button>
-    <h3>Book a setup consult</h3>
-    <p>Tell us about the coding or browser automation workflow you want to run, and SophosAI can help design the right secure workspace.</p>
-    <iframe src="https://subscribe-forms.beehiiv.com/8bad8259-c005-4d5f-9117-a4cb983858ee" class="beehiiv-embed" data-test-id="beehiiv-embed" frameborder="0" scrolling="no"></iframe>
-  </div>
-</div>
-
-<script>
-  function openModal() {
-    document.getElementById('waitlist-modal').classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-  function closeModal() {
-    document.getElementById('waitlist-modal').classList.remove('open');
-    document.body.style.overflow = '';
-  }
-  document.getElementById('waitlist-modal').addEventListener('click', (e) => {
-    if (e.target === e.currentTarget) closeModal();
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeModal();
-  });
-</script>
-<script async src="https://subscribe-forms.beehiiv.com/embed.js"></script>
-<script type="text/javascript" async src="https://subscribe-forms.beehiiv.com/attribution.js"></script>
 </body>
 </html>
