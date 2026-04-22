@@ -193,6 +193,21 @@
     width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
     background: rgba(99,102,241,0.12); margin-bottom: 14px; font-size: 20px;
   }
+  .trust-grid {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px;
+  }
+  .trust-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px;
+  }
+  .trust-kicker {
+    font-family: var(--font-mono); font-size: 11px; color: var(--green); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px;
+  }
+  .trust-card h3 {
+    font-size: 18px; margin-bottom: 8px;
+  }
+  .trust-card p {
+    color: var(--text-dim); font-size: 14px; line-height: 1.7;
+  }
   .chip-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
   .chip {
     font-size: 11px; font-family: var(--font-mono); color: var(--text-dim);
@@ -409,6 +424,34 @@
         <span class="chip">developers</span>
         <span class="chip">power users</span>
       </div>
+    </div>
+  </div>
+</section>
+
+<section id="trust">
+  <div class="section-label">// why this feels safer</div>
+  <h2>More control. Less risk.</h2>
+  <p class="section-sub">SophosAI is designed around secure workspaces, clearer boundaries, and safer operating defaults for agent workflows. The point is not perfect safety theater. The point is a much better operating model than letting agents loose on your real machine.</p>
+  <div class="trust-grid">
+    <div class="trust-card">
+      <div class="trust-kicker">Isolation</div>
+      <h3>Separate workspace</h3>
+      <p>Agents run in a dedicated environment instead of directly on your primary machine and everyday setup.</p>
+    </div>
+    <div class="trust-card">
+      <div class="trust-kicker">Control</div>
+      <h3>Workflow-specific setup</h3>
+      <p>The environment is configured around what you actually want to do, especially coding and browser automation tasks.</p>
+    </div>
+    <div class="trust-card">
+      <div class="trust-kicker">Visibility</div>
+      <h3>Clearer boundaries</h3>
+      <p>You know where the agent is working, what environment it is using, and why that is safer than your real machine.</p>
+    </div>
+    <div class="trust-card">
+      <div class="trust-kicker">Recovery</div>
+      <h3>Safer experimentation</h3>
+      <p>Checkpointed environments and structured setups make mistakes less catastrophic and iteration more practical.</p>
     </div>
   </div>
 </section>
